@@ -13,9 +13,7 @@
       --text:#f5f7ff;
     }
 
-    *{
-      box-sizing:border-box;
-    }
+    *{ box-sizing:border-box; }
 
     body{
       margin:0;
@@ -23,15 +21,12 @@
       display:flex;
       justify-content:center;
       align-items:center;
-
       background: radial-gradient(circle at top,#0d1324 0%,#05070f 70%);
       font-family: Inter, system-ui, sans-serif;
       color:var(--text);
     }
 
-    .clock{
-      text-align:center;
-    }
+    .clock{ text-align:center; }
 
     .row{
       display:flex;
@@ -41,10 +36,7 @@
       margin:14px 0;
     }
 
-    .group{
-      display:flex;
-      gap:10px;
-    }
+    .group{ display:flex; gap:10px; }
 
     .separator{
       font-size:42px;
@@ -58,9 +50,7 @@
       width:84px;
       height:102px;
       perspective:1000px;
-
-      /* 추가: 3D 플립 안정화 */
-      transform-style: preserve-3d;
+      transform-style: preserve-3d; /* 안정성 */
     }
 
     .small{
@@ -77,26 +67,23 @@
       width:100%;
       height:50%;
       overflow:hidden;
-
       background: linear-gradient(180deg, var(--top) 0%, var(--bottom) 100%);
       border: 1px solid rgba(255,255,255,.05);
     }
 
     /* top */
-    .top,
-    .flip-top{
+    .top, .flip-top{
       top:0;
       border-radius:12px 12px 0 0;
     }
 
     /* bottom */
-    .bottom,
-    .flip-bottom{
+    .bottom, .flip-bottom{
       bottom:0;
       border-radius:0 0 12px 12px;
     }
 
-    /* REAL SPLIT */
+    /* text base */
     .top span,
     .bottom span,
     .flip-top span,
@@ -106,8 +93,12 @@
       width:100%;
       text-align:center;
       font-weight:700;
-      transform:translateX(-50%);
       user-select:none;
+
+      /* 중앙 기준 배치(폰트/브라우저 영향 최소화) */
+      top:50%;
+      transform: translate(-50%, -50%);
+      will-change: transform;
     }
 
     /* BIG */
@@ -122,24 +113,10 @@
       line-height:72px;
     }
 
-    /* 핵심 */
-    .top span,
-    .flip-top span{
-      top:0;
-    }
-
-    /*
-      기존(삭제됨):
-      .bottom span/.flip-bottom span { top:-51px; }
-      .small ... { top:-36px; }
-
-      변경(추가):
-      하단 절반은 "전체 높이의 절반"만큼 위로 올려서 정확히 반절만 보이게 함
-    */
+    /* bottom은 정중앙 기준에서 "반칸(=flip 높이의 50%)" 만큼 더 위로 */
     .bottom span,
     .flip-bottom span{
-      top:0;
-      transform: translateX(-50%) translateY(-50%);
+      transform: translate(-50%, -50%) translateY(-50%);
     }
 
     /* flip */
@@ -207,16 +184,11 @@
   </div>
 
   <script>
-    const timezone =
-      Intl.DateTimeFormat()
-        .resolvedOptions()
-        .timeZone;
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     function createDigit(small=false){
       const d = document.createElement("div");
       d.className = `flip ${small ? "small" : ""}`.trim();
-
-      /* 변경: 템플릿 문자열 공백/개행 정리(동작 동일, 렌더 안정성 약간↑) */
       d.innerHTML = `
         <div class="top"><span>0</span></div>
         <div class="bottom"><span>0</span></div>
@@ -224,13 +196,12 @@
         <div class="flip-bottom"><span>0</span></div>
         <div class="hinge"></div>
       `;
-
       return d;
     }
 
     function build(container, count, small=false){
       const arr = [];
-      for(let i=0; i<count; i++){
+      for(let i=0;i<count;i++){
         const d = createDigit(small);
         container.appendChild(d);
         arr.push(d);
@@ -238,44 +209,25 @@
       return arr;
     }
 
-    const hourDigits =
-      build(document.getElementById("hours"), 2);
-
-    const minuteDigits =
-      build(document.getElementById("minutes"), 2);
-
-    const secondDigits =
-      build(document.getElementById("seconds"), 2);
-
-    const dateDigits =
-      build(document.getElementById("date"), 6, true);
-
-    const dayDigits =
-      build(document.getElementById("day"), 3, true);
+    const hourDigits   = build(document.getElementById("hours"), 2);
+    const minuteDigits = build(document.getElementById("minutes"), 2);
+    const secondDigits = build(document.getElementById("seconds"), 2);
+    const dateDigits   = build(document.getElementById("date"), 6, true);
+    const dayDigits    = build(document.getElementById("day"), 3, true);
 
     function flip(el, newVal){
-      const top =
-        el.querySelector(".top span");
-
-      const bottom =
-        el.querySelector(".bottom span");
-
-      const flipTop =
-        el.querySelector(".flip-top span");
-
-      const flipBottom =
-        el.querySelector(".flip-bottom span");
+      const top        = el.querySelector(".top span");
+      const bottom     = el.querySelector(".bottom span");
+      const flipTop    = el.querySelector(".flip-top span");
+      const flipBottom = el.querySelector(".flip-bottom span");
 
       if(top.textContent === newVal) return;
 
-      flipTop.textContent =
-        top.textContent;
-
-      flipBottom.textContent =
-        newVal;
+      flipTop.textContent = top.textContent;
+      flipBottom.textContent = newVal;
 
       el.classList.remove("play");
-      void el.offsetWidth;
+      void el.offsetWidth; // restart animation
       el.classList.add("play");
 
       setTimeout(() => {
@@ -287,35 +239,20 @@
 
     function update(){
       const now = new Date(
-        new Date().toLocaleString(
-          "en-US",
-          { timeZone: timezone }
-        )
+        new Date().toLocaleString("en-US", { timeZone: timezone })
       );
 
-      const hh =
-        String(now.getHours()).padStart(2,"0");
+      const hh = String(now.getHours()).padStart(2,"0");
+      const mm = String(now.getMinutes()).padStart(2,"0");
+      const ss = String(now.getSeconds()).padStart(2,"0");
 
-      const mm =
-        String(now.getMinutes()).padStart(2,"0");
+      const yy = String(now.getFullYear()).slice(2);
+      const mo = String(now.getMonth()+1).padStart(2,"0");
+      const dd = String(now.getDate()).padStart(2,"0");
 
-      const ss =
-        String(now.getSeconds()).padStart(2,"0");
-
-      const yy =
-        String(now.getFullYear()).slice(2);
-
-      const mo =
-        String(now.getMonth()+1).padStart(2,"0");
-
-      const dd =
-        String(now.getDate()).padStart(2,"0");
-
-      const day =
-        now.toLocaleDateString(
-          "en-US",
-          { weekday:"short" }
-        ).toUpperCase();
+      const day = now
+        .toLocaleDateString("en-US", { weekday:"short" })
+        .toUpperCase();
 
       hourDigits.forEach((d,i) => flip(d, hh[i]));
       minuteDigits.forEach((d,i) => flip(d, mm[i]));
@@ -327,8 +264,8 @@
       dayDigits.forEach((d,i) => flip(d, day[i] || " "));
     }
 
-    setInterval(update, 1000);
     update();
+    setInterval(update, 1000);
   </script>
 </body>
 </html>
