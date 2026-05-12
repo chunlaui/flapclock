@@ -7,7 +7,6 @@
 
   <style>
     :root{
-      --bg:#05070f;
       --top:#252938;
       --bottom:#171922;
       --text:#f5f7ff;
@@ -50,18 +49,21 @@
       width:84px;
       height:102px;
       perspective:1000px;
-      transform-style: preserve-3d; /* 안정성 */
+      transform-style: preserve-3d;
+
+      /* ✅ 추가: 이 플립의 "전체 높이"를 변수로 고정 */
+      --h: 102px;
     }
 
     .small{
       width:58px;
       height:72px;
+
+      /* ✅ 추가: small 플립의 전체 높이 */
+      --h: 72px;
     }
 
-    .top,
-    .bottom,
-    .flip-top,
-    .flip-bottom{
+    .top,.bottom,.flip-top,.flip-bottom{
       position:absolute;
       left:0;
       width:100%;
@@ -71,19 +73,17 @@
       border: 1px solid rgba(255,255,255,.05);
     }
 
-    /* top */
-    .top, .flip-top{
+    .top,.flip-top{
       top:0;
       border-radius:12px 12px 0 0;
     }
 
-    /* bottom */
-    .bottom, .flip-bottom{
+    .bottom,.flip-bottom{
       bottom:0;
       border-radius:0 0 12px 12px;
     }
 
-    /* text base */
+    /* ===== ✅ 핵심: span을 "위에서 시작 + line-height=전체 높이"로 통일 ===== */
     .top span,
     .bottom span,
     .flip-top span,
@@ -95,31 +95,26 @@
       font-weight:700;
       user-select:none;
 
-      /* 중앙 기준 배치(폰트/브라우저 영향 최소화) */
-      top:50%;
-      transform: translate(-50%, -50%);
-      will-change: transform;
+      top:0;
+      transform:translateX(-50%);
+      line-height: var(--h);
     }
 
-    /* BIG */
+    /* 글자 크기만 분리 */
     .flip span{
       font-size:64px;
-      line-height:102px;
     }
 
-    /* SMALL */
     .small span{
       font-size:36px;
-      line-height:72px;
     }
 
-    /* bottom은 정중앙 기준에서 "반칸(=flip 높이의 50%)" 만큼 더 위로 */
+    /* ✅ bottom은 전체 높이의 절반만큼 위로 올려서 아래 절반만 보이게 */
     .bottom span,
     .flip-bottom span{
-      transform: translate(-50%, -50%) translateY(-50%);
+      top: calc(var(--h) * -0.5);
     }
 
-    /* flip */
     .flip-top{
       z-index:5;
       transform-origin:bottom;
@@ -167,7 +162,6 @@
 
 <body>
   <div class="clock">
-    <!-- TIME -->
     <div class="row">
       <div class="group" id="hours"></div>
       <div class="separator">:</div>
@@ -176,10 +170,7 @@
       <div class="group" id="seconds"></div>
     </div>
 
-    <!-- DATE -->
     <div class="row" id="date"></div>
-
-    <!-- DAY -->
     <div class="row" id="day"></div>
   </div>
 
@@ -216,9 +207,9 @@
     const dayDigits    = build(document.getElementById("day"), 3, true);
 
     function flip(el, newVal){
-      const top        = el.querySelector(".top span");
-      const bottom     = el.querySelector(".bottom span");
-      const flipTop    = el.querySelector(".flip-top span");
+      const top = el.querySelector(".top span");
+      const bottom = el.querySelector(".bottom span");
+      const flipTop = el.querySelector(".flip-top span");
       const flipBottom = el.querySelector(".flip-bottom span");
 
       if(top.textContent === newVal) return;
@@ -227,7 +218,7 @@
       flipBottom.textContent = newVal;
 
       el.classList.remove("play");
-      void el.offsetWidth; // restart animation
+      void el.offsetWidth;
       el.classList.add("play");
 
       setTimeout(() => {
