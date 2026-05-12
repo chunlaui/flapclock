@@ -1,597 +1,423 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Notion Flip Clock Ultimate</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Notion Flip Clock V9</title>
 
 <style>
 
 :root{
+  --bg:#05070f;
+  --cardTop:#252938;
+  --cardBottom:#171922;
+  --text:#f5f7ff;
 
---bg:#05070f;
---card1:#232633;
---card2:#171922;
---line:#0d0f15;
---text:#f5f7ff;
+  --bigW:84px;
+  --bigH:102px;
 
---big-w:84px;
---big-h:102px;
-
---small-w:58px;
---small-h:72px;
-
+  --smallW:58px;
+  --smallH:72px;
 }
 
 *{
-box-sizing:border-box;
+  box-sizing:border-box;
 }
 
 body{
+  margin:0;
+  min-height:100vh;
 
-margin:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 
-background:
-radial-gradient(
-circle at top,
-#0d1324 0%,
-#05070f 70%
-);
+  background:
+  radial-gradient(circle at top,#0d1324 0%,#05070f 70%);
 
-font-family:
-Inter,
-system-ui,
-sans-serif;
+  color:var(--text);
 
-display:flex;
-justify-content:center;
-align-items:center;
+  font-family:
+  Inter,
+  system-ui,
+  sans-serif;
 
-min-height:100vh;
-
-color:white;
-
-overflow:hidden;
-
+  overflow:hidden;
 }
 
 .clock{
-text-align:center;
-padding:24px;
-width:100%;
+  width:100%;
+  padding:24px;
+  text-align:center;
 }
 
 .row{
-
-display:flex;
-justify-content:center;
-align-items:center;
-
-gap:14px;
-
-margin:12px 0;
-
-flex-wrap:wrap;
-
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:14px;
+  margin:12px 0;
+  flex-wrap:wrap;
 }
 
 .group{
-display:flex;
-gap:10px;
+  display:flex;
+  gap:10px;
 }
 
 .separator{
-
-font-size:42px;
-font-weight:700;
-
-opacity:.75;
-
-transform:translateY(-3px);
-
+  font-size:42px;
+  font-weight:700;
+  opacity:.7;
 }
 
 .flip{
+  position:relative;
+  perspective:1000px;
 
-position:relative;
-
-perspective:1200px;
-
-transition:
-transform .25s ease,
-filter .25s ease;
-
+  transition:
+  transform .2s ease,
+  filter .2s ease;
 }
 
 .flip:hover{
-
-transform:translateY(-2px);
-
-filter:
-drop-shadow(0 0 12px rgba(255,255,255,.08));
-
+  transform:translateY(-2px);
+  filter:drop-shadow(0 0 10px rgba(255,255,255,.08));
 }
 
 .big{
-
-width:var(--big-w);
-height:var(--big-h);
-
+  width:var(--bigW);
+  height:var(--bigH);
 }
 
 .small{
-
-width:var(--small-w);
-height:var(--small-h);
-
+  width:var(--smallW);
+  height:var(--smallH);
 }
+
+/* CARD HALF */
 
 .top,
 .bottom,
 .flip-top,
 .flip-bottom{
 
-position:absolute;
+  position:absolute;
+  left:0;
 
-left:0;
+  width:100%;
+  height:50%;
 
-width:100%;
-height:50%;
+  overflow:hidden;
 
-overflow:hidden;
+  background:
+  linear-gradient(
+    180deg,
+    var(--cardTop) 0%,
+    var(--cardBottom) 100%
+  );
 
-background:
-linear-gradient(
-180deg,
-var(--card1) 0%,
-var(--card2) 100%
-);
+  border:1px solid rgba(255,255,255,.05);
 
-border:
-1px solid rgba(255,255,255,.05);
-
-box-shadow:
-inset 0 1px 0 rgba(255,255,255,.04);
+  box-shadow:
+  inset 0 1px 0 rgba(255,255,255,.04);
 
 }
 
 .top,
 .flip-top{
-
-top:0;
-
-border-radius:12px 12px 0 0;
-
+  top:0;
+  border-radius:12px 12px 0 0;
 }
 
 .bottom,
 .flip-bottom{
-
-bottom:0;
-
-border-radius:0 0 12px 12px;
-
+  bottom:0;
+  border-radius:0 0 12px 12px;
 }
+
+/* IMPORTANT */
 
 .top span,
 .bottom span,
 .flip-top span,
 .flip-bottom span{
 
-position:absolute;
+  position:absolute;
+  left:0;
 
-left:50%;
+  width:100%;
+  text-align:center;
 
-font-weight:700;
-
-letter-spacing:-2px;
-
-transform:translateX(-50%);
-
-white-space:nowrap;
+  font-weight:700;
+  letter-spacing:-2px;
 
 }
 
-/* BIG */
-
-.big .top span,
-.big .bottom span,
-.big .flip-top span,
-.big .flip-bottom span{
-
-font-size:64px;
-line-height:102px;
-
+.big span{
+  font-size:64px;
+  line-height:102px;
 }
 
-/* SMALL */
-
-.small .top span,
-.small .bottom span,
-.small .flip-top span,
-.small .flip-bottom span{
-
-font-size:36px;
-line-height:72px;
-
+.small span{
+  font-size:36px;
+  line-height:72px;
 }
 
-/* 핵심 clipping */
+/* THIS IS THE REAL FIX */
 
 .top span,
 .flip-top span{
-
-top:50%;
-
-transform:
-translateX(-50%)
-translateY(-100%);
-
+  top:0;
 }
 
 .bottom span,
 .flip-bottom span{
-
-top:-50%;
-
-transform:
-translateX(-50%);
-
+  top:-51px;
 }
 
+.small .bottom span,
+.small .flip-bottom span{
+  top:-36px;
+}
+
+/* FLIP */
+
 .flip-top{
-
-z-index:5;
-
-transform-origin:bottom;
-
-backface-visibility:hidden;
-
+  z-index:5;
+  transform-origin:bottom;
+  backface-visibility:hidden;
 }
 
 .flip-bottom{
-
-z-index:4;
-
-transform-origin:top;
-
-transform:rotateX(90deg);
-
-backface-visibility:hidden;
-
+  z-index:4;
+  transform-origin:top;
+  transform:rotateX(90deg);
+  backface-visibility:hidden;
 }
 
 .play .flip-top{
-
-animation:
-flipTop .42s
-cubic-bezier(.22,.61,.36,1)
-forwards;
-
+  animation:flipTop .42s cubic-bezier(.22,.61,.36,1) forwards;
 }
 
 .play .flip-bottom{
-
-animation:
-flipBottom .42s
-cubic-bezier(.22,.61,.36,1)
-.42s
-forwards;
-
+  animation:flipBottom .42s cubic-bezier(.22,.61,.36,1) .42s forwards;
 }
 
 @keyframes flipTop{
-
-0%{
-transform:rotateX(0deg);
-}
-
-100%{
-transform:rotateX(-90deg);
-}
-
+  0%{
+    transform:rotateX(0deg);
+  }
+  100%{
+    transform:rotateX(-90deg);
+  }
 }
 
 @keyframes flipBottom{
-
-0%{
-transform:rotateX(90deg);
-}
-
-100%{
-transform:rotateX(0deg);
-}
-
+  0%{
+    transform:rotateX(90deg);
+  }
+  100%{
+    transform:rotateX(0deg);
+  }
 }
 
 .hinge{
+  position:absolute;
 
-position:absolute;
+  top:50%;
+  left:0;
 
-top:50%;
-left:0;
+  width:100%;
+  height:3px;
 
-width:100%;
-height:3px;
+  transform:translateY(-50%);
 
-transform:translateY(-50%);
+  background:
+  linear-gradient(
+    180deg,
+    rgba(255,255,255,.05),
+    rgba(0,0,0,.9)
+  );
 
-background:
-linear-gradient(
-180deg,
-rgba(255,255,255,.05),
-rgba(0,0,0,.9)
-);
-
-z-index:20;
-
-box-shadow:
-0 1px 4px rgba(0,0,0,.9);
-
+  z-index:20;
 }
 
 @media(max-width:768px){
 
-:root{
+  :root{
+    --bigW:64px;
+    --bigH:82px;
 
---big-w:64px;
---big-h:82px;
+    --smallW:46px;
+    --smallH:58px;
+  }
 
---small-w:46px;
---small-h:58px;
+  .big span{
+    font-size:48px;
+    line-height:82px;
+  }
 
-}
+  .small span{
+    font-size:30px;
+    line-height:58px;
+  }
 
-.big .top span,
-.big .bottom span,
-.big .flip-top span,
-.big .flip-bottom span{
+  .bottom span,
+  .flip-bottom span{
+    top:-41px;
+  }
 
-font-size:48px;
-line-height:82px;
-
-}
-
-.separator{
-font-size:32px;
-}
+  .small .bottom span,
+  .small .flip-bottom span{
+    top:-29px;
+  }
 
 }
 
 </style>
 </head>
-
 <body>
 
 <div class="clock">
 
-<div class="row">
+  <div class="row">
 
-<div class="group" id="hours"></div>
+    <div class="group" id="hours"></div>
 
-<div class="separator">:</div>
+    <div class="separator">:</div>
 
-<div class="group" id="minutes"></div>
+    <div class="group" id="minutes"></div>
 
-<div class="separator">:</div>
+    <div class="separator">:</div>
 
-<div class="group" id="seconds"></div>
+    <div class="group" id="seconds"></div>
 
-</div>
+  </div>
 
-<div class="row" id="date"></div>
+  <div class="row" id="date"></div>
 
-<div class="row" id="day"></div>
+  <div class="row" id="day"></div>
 
 </div>
 
 <script>
 
-const timezone =
-Intl.DateTimeFormat()
-.resolvedOptions()
-.timeZone
+const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 function createDigit(small=false){
 
-const d=document.createElement("div")
+  const d=document.createElement('div');
 
-d.className=
-`flip ${small?"small":"big"}`
+  d.className=`flip ${small ? 'small' : 'big'}`;
 
-d.innerHTML=`
+  d.innerHTML=`
 
-<div class="top">
-<span>0</span>
-</div>
+  <div class="top"><span>0</span></div>
 
-<div class="bottom">
-<span>0</span>
-</div>
+  <div class="bottom"><span>0</span></div>
 
-<div class="flip-top">
-<span>0</span>
-</div>
+  <div class="flip-top"><span>0</span></div>
 
-<div class="flip-bottom">
-<span>0</span>
-</div>
+  <div class="flip-bottom"><span>0</span></div>
 
-<div class="hinge"></div>
+  <div class="hinge"></div>
 
-`
+  `;
 
-return d
-
+  return d;
 }
 
 function build(container,count,small=false){
 
-const arr=[]
+  const arr=[];
 
-for(let i=0;i<count;i++){
+  for(let i=0;i<count;i++){
 
-const d=createDigit(small)
+    const d=createDigit(small);
 
-container.appendChild(d)
+    container.appendChild(d);
 
-arr.push(d)
+    arr.push(d);
+  }
 
+  return arr;
 }
 
-return arr
+const hourDigits=build(document.getElementById('hours'),2);
+const minuteDigits=build(document.getElementById('minutes'),2);
+const secondDigits=build(document.getElementById('seconds'),2);
 
-}
-
-const hourDigits=
-build(
-document.getElementById("hours"),
-2
-)
-
-const minuteDigits=
-build(
-document.getElementById("minutes"),
-2
-)
-
-const secondDigits=
-build(
-document.getElementById("seconds"),
-2
-)
-
-const dateDigits=
-build(
-document.getElementById("date"),
-6,
-true
-)
-
-const dayDigits=
-build(
-document.getElementById("day"),
-3,
-true
-)
+const dateDigits=build(document.getElementById('date'),6,true);
+const dayDigits=build(document.getElementById('day'),3,true);
 
 function flip(el,newVal){
 
-const top=
-el.querySelector(".top span")
+  const top=el.querySelector('.top span');
+  const bottom=el.querySelector('.bottom span');
 
-const bottom=
-el.querySelector(".bottom span")
+  const flipTop=el.querySelector('.flip-top span');
+  const flipBottom=el.querySelector('.flip-bottom span');
 
-const flipTop=
-el.querySelector(".flip-top span")
+  if(top.textContent===newVal)return;
 
-const flipBottom=
-el.querySelector(".flip-bottom span")
+  flipTop.textContent=top.textContent;
+  flipBottom.textContent=newVal;
 
-if(top.textContent===newVal)return
+  el.classList.remove('play');
 
-flipTop.textContent=top.textContent
+  void el.offsetWidth;
 
-flipBottom.textContent=newVal
+  el.classList.add('play');
 
-el.classList.remove("play")
+  setTimeout(()=>{
 
-void el.offsetWidth
+    top.textContent=newVal;
+    bottom.textContent=newVal;
 
-el.classList.add("play")
+    el.classList.remove('play');
 
-setTimeout(()=>{
-
-top.textContent=newVal
-bottom.textContent=newVal
-
-el.classList.remove("play")
-
-},850)
-
-}
-
-function now(){
-
-return new Date(
-new Date().toLocaleString(
-"en-US",
-{
-timeZone:timezone
-}
-)
-)
+  },840);
 
 }
 
 function update(){
 
-const n=now()
+  const now=new Date(
+    new Date().toLocaleString(
+      'en-US',
+      {timeZone:timezone}
+    )
+  );
 
-const hh=
-String(n.getHours())
-.padStart(2,"0")
+  const hh=String(now.getHours()).padStart(2,'0');
+  const mm=String(now.getMinutes()).padStart(2,'0');
+  const ss=String(now.getSeconds()).padStart(2,'0');
 
-const mm=
-String(n.getMinutes())
-.padStart(2,"0")
+  const yy=String(now.getFullYear()).slice(2);
+  const mo=String(now.getMonth()+1).padStart(2,'0');
+  const dd=String(now.getDate()).padStart(2,'0');
 
-const ss=
-String(n.getSeconds())
-.padStart(2,"0")
+  const day=now
+  .toLocaleDateString('en-US',{weekday:'short'})
+  .toUpperCase();
 
-const yy=
-String(n.getFullYear())
-.slice(2)
+  hourDigits.forEach((d,i)=>flip(d,hh[i]));
+  minuteDigits.forEach((d,i)=>flip(d,mm[i]));
+  secondDigits.forEach((d,i)=>flip(d,ss[i]));
 
-const mo=
-String(n.getMonth()+1)
-.padStart(2,"0")
+  const dateStr=yy+mo+dd;
 
-const dd=
-String(n.getDate())
-.padStart(2,"0")
-
-const day=
-n.toLocaleDateString(
-"en-US",
-{
-weekday:"short"
-}
-).toUpperCase()
-
-hourDigits.forEach((d,i)=>
-flip(d,hh[i])
-)
-
-minuteDigits.forEach((d,i)=>
-flip(d,mm[i])
-)
-
-secondDigits.forEach((d,i)=>
-flip(d,ss[i])
-)
-
-const dateStr=yy+mo+dd
-
-dateDigits.forEach((d,i)=>
-flip(d,dateStr[i])
-)
-
-dayDigits.forEach((d,i)=>
-flip(d,day[i])
-)
+  dateDigits.forEach((d,i)=>flip(d,dateStr[i]));
+  dayDigits.forEach((d,i)=>flip(d,day[i]));
 
 }
 
-setInterval(update,1000)
-
-update()
+setInterval(update,1000);
+update();
 
 </script>
-
 </body>
 </html>
-```
+* 공항 split-flap 그림자
+* Notion 반응형 대응
