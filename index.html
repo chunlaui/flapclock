@@ -1,423 +1,289 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Notion Flip Clock V9</title>
-
-<style>
-
-:root{
-  --bg:#05070f;
-  --cardTop:#252938;
-  --cardBottom:#171922;
-  --text:#f5f7ff;
-
-  --bigW:84px;
-  --bigH:102px;
-
-  --smallW:58px;
-  --smallH:72px;
-}
-
-*{
-  box-sizing:border-box;
-}
-
-body{
-  margin:0;
-  min-height:100vh;
-
-  display:flex;
-  justify-content:center;
-  align-items:center;
-
-  background:
-  radial-gradient(circle at top,#0d1324 0%,#05070f 70%);
-
-  color:var(--text);
-
-  font-family:
-  Inter,
-  system-ui,
-  sans-serif;
-
-  overflow:hidden;
-}
-
-.clock{
-  width:100%;
-  padding:24px;
-  text-align:center;
-}
-
-.row{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:14px;
-  margin:12px 0;
-  flex-wrap:wrap;
-}
-
-.group{
-  display:flex;
-  gap:10px;
-}
-
-.separator{
-  font-size:42px;
-  font-weight:700;
-  opacity:.7;
-}
-
-.flip{
-  position:relative;
-  perspective:1000px;
-
-  transition:
-  transform .2s ease,
-  filter .2s ease;
-}
-
-.flip:hover{
-  transform:translateY(-2px);
-  filter:drop-shadow(0 0 10px rgba(255,255,255,.08));
-}
-
-.big{
-  width:var(--bigW);
-  height:var(--bigH);
-}
-
-.small{
-  width:var(--smallW);
-  height:var(--smallH);
-}
-
-/* CARD HALF */
-
-.top,
-.bottom,
-.flip-top,
-.flip-bottom{
-
-  position:absolute;
-  left:0;
-
-  width:100%;
-  height:50%;
-
-  overflow:hidden;
-
-  background:
-  linear-gradient(
-    180deg,
-    var(--cardTop) 0%,
-    var(--cardBottom) 100%
-  );
-
-  border:1px solid rgba(255,255,255,.05);
-
-  box-shadow:
-  inset 0 1px 0 rgba(255,255,255,.04);
-
-}
-
-.top,
-.flip-top{
-  top:0;
-  border-radius:12px 12px 0 0;
-}
-
-.bottom,
-.flip-bottom{
-  bottom:0;
-  border-radius:0 0 12px 12px;
-}
-
-/* IMPORTANT */
-
-.top span,
-.bottom span,
-.flip-top span,
-.flip-bottom span{
-
-  position:absolute;
-  left:0;
-
-  width:100%;
-  text-align:center;
-
-  font-weight:700;
-  letter-spacing:-2px;
-
-}
-
-.big span{
-  font-size:64px;
-  line-height:102px;
-}
-
-.small span{
-  font-size:36px;
-  line-height:72px;
-}
-
-/* THIS IS THE REAL FIX */
-
-.top span,
-.flip-top span{
-  top:0;
-}
-
-.bottom span,
-.flip-bottom span{
-  top:-51px;
-}
-
-.small .bottom span,
-.small .flip-bottom span{
-  top:-36px;
-}
-
-/* FLIP */
-
-.flip-top{
-  z-index:5;
-  transform-origin:bottom;
-  backface-visibility:hidden;
-}
-
-.flip-bottom{
-  z-index:4;
-  transform-origin:top;
-  transform:rotateX(90deg);
-  backface-visibility:hidden;
-}
-
-.play .flip-top{
-  animation:flipTop .42s cubic-bezier(.22,.61,.36,1) forwards;
-}
-
-.play .flip-bottom{
-  animation:flipBottom .42s cubic-bezier(.22,.61,.36,1) .42s forwards;
-}
-
-@keyframes flipTop{
-  0%{
-    transform:rotateX(0deg);
-  }
-  100%{
-    transform:rotateX(-90deg);
-  }
-}
-
-@keyframes flipBottom{
-  0%{
-    transform:rotateX(90deg);
-  }
-  100%{
-    transform:rotateX(0deg);
-  }
-}
-
-.hinge{
-  position:absolute;
-
-  top:50%;
-  left:0;
-
-  width:100%;
-  height:3px;
-
-  transform:translateY(-50%);
-
-  background:
-  linear-gradient(
-    180deg,
-    rgba(255,255,255,.05),
-    rgba(0,0,0,.9)
-  );
-
-  z-index:20;
-}
-
-@media(max-width:768px){
-
-  :root{
-    --bigW:64px;
-    --bigH:82px;
-
-    --smallW:46px;
-    --smallH:58px;
-  }
-
-  .big span{
-    font-size:48px;
-    line-height:82px;
-  }
-
-  .small span{
-    font-size:30px;
-    line-height:58px;
-  }
-
-  .bottom span,
-  .flip-bottom span{
-    top:-41px;
-  }
-
-  .small .bottom span,
-  .small .flip-bottom span{
-    top:-29px;
-  }
-
-}
-
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notion Flip Clock V9 (Fixed)</title>
+
+  <style>
+    :root{
+      --bg:#05070f;
+      --top:#252938;
+      --bottom:#171922;
+      --text:#f5f7ff;
+
+      --flipDur: .42s;
+      --flipEase: cubic-bezier(.22,.61,.36,1);
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background: radial-gradient(circle at top,#0d1324 0%,#05070f 70%);
+      font-family: Inter, system-ui, sans-serif;
+      color:var(--text);
+    }
+
+    .clock{ text-align:center; }
+
+    .row{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:14px;
+      margin:14px 0;
+    }
+
+    .group{
+      display:flex;
+      gap:10px;
+    }
+
+    .separator{
+      font-size:42px;
+      font-weight:700;
+      opacity:.7;
+      line-height:1;
+    }
+
+    .flip{
+      position:relative;
+      width:84px;
+      height:102px;
+      perspective:1000px;
+      transform-style: preserve-3d; /* 중요: 3D 플립 안정화 */
+    }
+
+    .small{
+      width:58px;
+      height:72px;
+    }
+
+    .top,
+    .bottom,
+    .flip-top,
+    .flip-bottom{
+      position:absolute;
+      left:0;
+      width:100%;
+      height:50%;
+      overflow:hidden;
+      background: linear-gradient(180deg, var(--top) 0%, var(--bottom) 100%);
+      border: 1px solid rgba(255,255,255,.05);
+    }
+
+    /* top */
+    .top, .flip-top{
+      top:0;
+      border-radius:12px 12px 0 0;
+    }
+
+    /* bottom */
+    .bottom, .flip-bottom{
+      bottom:0;
+      border-radius:0 0 12px 12px;
+    }
+
+    /* 숫자/문자 공통 */
+    .top span,
+    .bottom span,
+    .flip-top span,
+    .flip-bottom span{
+      position:absolute;
+      left:50%;
+      width:100%;
+      text-align:center;
+      font-weight:700;
+      transform: translateX(-50%);
+      will-change: transform;
+      user-select:none;
+    }
+
+    /* BIG */
+    .flip span{
+      font-size:64px;
+      line-height:102px; /* 전체 높이 기준 */
+    }
+
+    /* SMALL */
+    .small span{
+      font-size:36px;
+      line-height:72px;
+    }
+
+    /*
+      핵심 변경:
+      - 위(Top)는 위쪽 절반이 보이도록 기본 위치
+      - 아래(Bottom)는 "전체 라인박스 높이의 절반만큼 위로" 올려서 아래 절반이 보이게 함
+      => 픽셀(-51px/-36px) 하드코딩 제거
+    */
+    .top span,
+    .flip-top span{
+      top:0;
+    }
+
+    .bottom span,
+    .flip-bottom span{
+      top:0;
+      transform: translateX(-50%) translateY(-50%);
+    }
+
+    /* flip */
+    .flip-top{
+      z-index:5;
+      transform-origin: bottom;
+      backface-visibility:hidden;
+    }
+
+    .flip-bottom{
+      z-index:4;
+      transform-origin: top;
+      transform: rotateX(90deg);
+      backface-visibility:hidden;
+    }
+
+    .play .flip-top{
+      animation: flipTop var(--flipDur) var(--flipEase) forwards;
+    }
+
+    .play .flip-bottom{
+      animation: flipBottom var(--flipDur) var(--flipEase) var(--flipDur) forwards;
+    }
+
+    @keyframes flipTop{
+      0%{ transform: rotateX(0deg); }
+      100%{ transform: rotateX(-90deg); }
+    }
+
+    @keyframes flipBottom{
+      0%{ transform: rotateX(90deg); }
+      100%{ transform: rotateX(0deg); }
+    }
+
+    .hinge{
+      position:absolute;
+      top:50%;
+      left:0;
+      width:100%;
+      height:3px;
+      transform:translateY(-50%);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.9));
+      z-index:20;
+      pointer-events:none;
+    }
+  </style>
 </head>
+
 <body>
+  <div class="clock">
+    <!-- TIME -->
+    <div class="row">
+      <div class="group" id="hours"></div>
+      <div class="separator">:</div>
+      <div class="group" id="minutes"></div>
+      <div class="separator">:</div>
+      <div class="group" id="seconds"></div>
+    </div>
 
-<div class="clock">
+    <!-- DATE -->
+    <div class="row" id="date"></div>
 
-  <div class="row">
-
-    <div class="group" id="hours"></div>
-
-    <div class="separator">:</div>
-
-    <div class="group" id="minutes"></div>
-
-    <div class="separator">:</div>
-
-    <div class="group" id="seconds"></div>
-
+    <!-- DAY -->
+    <div class="row" id="day"></div>
   </div>
 
-  <div class="row" id="date"></div>
+  <script>
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const FLIP_TOTAL_MS = 840; // .42s + .42s (두번째는 delay .42s)
 
-  <div class="row" id="day"></div>
+    function createDigit(small=false){
+      const d = document.createElement("div");
+      d.className = `flip ${small ? "small" : ""}`.trim();
+      d.innerHTML = `
+        <div class="top"><span>0</span></div>
+        <div class="bottom"><span>0</span></div>
+        <div class="flip-top"><span>0</span></div>
+        <div class="flip-bottom"><span>0</span></div>
+        <div class="hinge"></div>
+      `;
+      return d;
+    }
 
-</div>
+    function build(container, count, small=false){
+      const arr = [];
+      for(let i=0;i<count;i++){
+        const d = createDigit(small);
+        container.appendChild(d);
+        arr.push(d);
+      }
+      return arr;
+    }
 
-<script>
+    const hourDigits   = build(document.getElementById("hours"),   2);
+    const minuteDigits = build(document.getElementById("minutes"), 2);
+    const secondDigits = build(document.getElementById("seconds"), 2);
+    const dateDigits   = build(document.getElementById("date"),    6, true);
+    const dayDigits    = build(document.getElementById("day"),     3, true);
 
-const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    function flip(el, newVal){
+      const top        = el.querySelector(".top span");
+      const bottom     = el.querySelector(".bottom span");
+      const flipTop    = el.querySelector(".flip-top span");
+      const flipBottom = el.querySelector(".flip-bottom span");
 
-function createDigit(small=false){
+      if(top.textContent === newVal) return;
 
-  const d=document.createElement('div');
+      flipTop.textContent = top.textContent;
+      flipBottom.textContent = newVal;
 
-  d.className=`flip ${small ? 'small' : 'big'}`;
+      el.classList.remove("play");
+      void el.offsetWidth; // reflow to restart animation
+      el.classList.add("play");
 
-  d.innerHTML=`
+      setTimeout(() => {
+        top.textContent = newVal;
+        bottom.textContent = newVal;
+        el.classList.remove("play");
+      }, FLIP_TOTAL_MS);
+    }
 
-  <div class="top"><span>0</span></div>
+    function nowInTimeZone(tz){
+      // 기존 방식 유지: tz 기준 문자열 -> Date로 재파싱
+      return new Date(new Date().toLocaleString("en-US", { timeZone: tz }));
+    }
 
-  <div class="bottom"><span>0</span></div>
+    function update(){
+      const now = nowInTimeZone(timezone);
 
-  <div class="flip-top"><span>0</span></div>
+      const hh = String(now.getHours()).padStart(2,"0");
+      const mm = String(now.getMinutes()).padStart(2,"0");
+      const ss = String(now.getSeconds()).padStart(2,"0");
 
-  <div class="flip-bottom"><span>0</span></div>
+      const yy = String(now.getFullYear()).slice(2);
+      const mo = String(now.getMonth()+1).padStart(2,"0");
+      const dd = String(now.getDate()).padStart(2,"0");
 
-  <div class="hinge"></div>
+      const day = now
+        .toLocaleDateString("en-US", { weekday:"short" })
+        .toUpperCase();
 
-  `;
+      hourDigits.forEach((d,i)   => flip(d, hh[i]));
+      minuteDigits.forEach((d,i) => flip(d, mm[i]));
+      secondDigits.forEach((d,i) => flip(d, ss[i]));
 
-  return d;
-}
+      const dateStr = yy + mo + dd;
+      dateDigits.forEach((d,i) => flip(d, dateStr[i]));
 
-function build(container,count,small=false){
+      dayDigits.forEach((d,i) => flip(d, day[i] || " "));
+    }
 
-  const arr=[];
-
-  for(let i=0;i<count;i++){
-
-    const d=createDigit(small);
-
-    container.appendChild(d);
-
-    arr.push(d);
-  }
-
-  return arr;
-}
-
-const hourDigits=build(document.getElementById('hours'),2);
-const minuteDigits=build(document.getElementById('minutes'),2);
-const secondDigits=build(document.getElementById('seconds'),2);
-
-const dateDigits=build(document.getElementById('date'),6,true);
-const dayDigits=build(document.getElementById('day'),3,true);
-
-function flip(el,newVal){
-
-  const top=el.querySelector('.top span');
-  const bottom=el.querySelector('.bottom span');
-
-  const flipTop=el.querySelector('.flip-top span');
-  const flipBottom=el.querySelector('.flip-bottom span');
-
-  if(top.textContent===newVal)return;
-
-  flipTop.textContent=top.textContent;
-  flipBottom.textContent=newVal;
-
-  el.classList.remove('play');
-
-  void el.offsetWidth;
-
-  el.classList.add('play');
-
-  setTimeout(()=>{
-
-    top.textContent=newVal;
-    bottom.textContent=newVal;
-
-    el.classList.remove('play');
-
-  },840);
-
-}
-
-function update(){
-
-  const now=new Date(
-    new Date().toLocaleString(
-      'en-US',
-      {timeZone:timezone}
-    )
-  );
-
-  const hh=String(now.getHours()).padStart(2,'0');
-  const mm=String(now.getMinutes()).padStart(2,'0');
-  const ss=String(now.getSeconds()).padStart(2,'0');
-
-  const yy=String(now.getFullYear()).slice(2);
-  const mo=String(now.getMonth()+1).padStart(2,'0');
-  const dd=String(now.getDate()).padStart(2,'0');
-
-  const day=now
-  .toLocaleDateString('en-US',{weekday:'short'})
-  .toUpperCase();
-
-  hourDigits.forEach((d,i)=>flip(d,hh[i]));
-  minuteDigits.forEach((d,i)=>flip(d,mm[i]));
-  secondDigits.forEach((d,i)=>flip(d,ss[i]));
-
-  const dateStr=yy+mo+dd;
-
-  dateDigits.forEach((d,i)=>flip(d,dateStr[i]));
-  dayDigits.forEach((d,i)=>flip(d,day[i]));
-
-}
-
-setInterval(update,1000);
-update();
-
-</script>
+    update();
+    setInterval(update, 1000);
+  </script>
 </body>
 </html>
-* 공항 split-flap 그림자
-* Notion 반응형 대응
