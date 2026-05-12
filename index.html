@@ -3,124 +3,86 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Notion Flip Clock V9</title>
-
+  <title>Notion Flip Clock V50</title>
   <style>
     :root{
       --top:#252938;
       --bottom:#171922;
       --text:#f5f7ff;
     }
-
     *{ box-sizing:border-box; }
 
     body{
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      align-items:center;
+      margin:0; min-height:100vh;
+      display:flex; justify-content:center; align-items:center;
       background: radial-gradient(circle at top,#0d1324 0%,#05070f 70%);
       font-family: Inter, system-ui, sans-serif;
       color:var(--text);
     }
-
     .clock{ text-align:center; }
-
-    .row{
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      gap:14px;
-      margin:14px 0;
-    }
-
+    .row{ display:flex; justify-content:center; align-items:center; gap:14px; margin:14px 0; }
     .group{ display:flex; gap:10px; }
-
-    .separator{
-      font-size:42px;
-      font-weight:700;
-      opacity:.7;
-      line-height:1;
-    }
+    .separator{ font-size:42px; font-weight:700; opacity:.7; line-height:1; }
 
     .flip{
       position:relative;
-      width:84px;
-      height:102px;
+      width:84px; height:102px;
       perspective:1000px;
       transform-style: preserve-3d;
 
-      /* ✅ 추가: 이 플립의 "전체 높이"를 변수로 고정 */
       --h: 102px;
+
+      /* ▼ 폰트 보정값. 위/아래가 어긋나면 이 값만 조절(예: 2px, 3px, 4px, -2px 등) */
+      --tweak: 3px;
     }
 
     .small{
-      width:58px;
-      height:72px;
-
-      /* ✅ 추가: small 플립의 전체 높이 */
+      width:58px; height:72px;
       --h: 72px;
+      --tweak: 2px;   /* 작은 카드는 보통 조금 더 작게 */
     }
 
-    .top,.bottom,.flip-top,.flip-bottom{
-      position:absolute;
-      left:0;
-      width:100%;
-      height:50%;
+    .top, .bottom, .flip-top, .flip-bottom{
+      position:absolute; left:0;
+      width:100%; height:50%;
       overflow:hidden;
       background: linear-gradient(180deg, var(--top) 0%, var(--bottom) 100%);
       border: 1px solid rgba(255,255,255,.05);
     }
 
-    .top,.flip-top{
-      top:0;
-      border-radius:12px 12px 0 0;
-    }
+    .top, .flip-top{ top:0; border-radius:12px 12px 0 0; }
+    .bottom, .flip-bottom{ bottom:0; border-radius:0 0 12px 12px; }
 
-    .bottom,.flip-bottom{
-      bottom:0;
-      border-radius:0 0 12px 12px;
-    }
+    /* 모든 span은 카드 "전체 높이"의 컨테이너에 flex로 정확히 중앙 정렬
+       → 상단/하단 span 모두 .flip 좌표 기준 같은 위치에 글자가 놓여서 자동 정렬
+       → 폰트 메트릭 어긋남은 --tweak로 일괄 보정 */
 
-    /* ===== ✅ 핵심: span을 "위에서 시작 + line-height=전체 높이"로 통일 ===== */
-    .top span,
-    .bottom span,
-    .flip-top span,
-    .flip-bottom span{
+    .top span, .flip-top span,
+    .bottom span, .flip-bottom span{
       position:absolute;
-      left:50%;
+      left:0;
       width:100%;
-      text-align:center;
+      height: var(--h);
+      display:flex;
+      align-items:center;
+      justify-content:center;
       font-weight:700;
+      line-height:1;
       user-select:none;
-
-      top:0;
-      transform:translateX(-50%);
-      line-height: var(--h);
+      transform: translateY(var(--tweak)); /* 폰트 보정 */
     }
 
-    /* 글자 크기만 분리 */
-    .flip span{
-      font-size:64px;
-    }
+    .top span, .flip-top span{ top:0; }
+    .bottom span, .flip-bottom span{ bottom:0; }
 
-    .small span{
-      font-size:36px;
-    }
-
-    /* ✅ bottom은 전체 높이의 절반만큼 위로 올려서 아래 절반만 보이게 */
-    .bottom span,
-    .flip-bottom span{
-      top: calc(var(--h) * -0.5);
-    }
+    .flip span{ font-size:64px; }
+    .small span{ font-size:36px; }
 
     .flip-top{
       z-index:5;
       transform-origin:bottom;
       backface-visibility:hidden;
     }
-
     .flip-bottom{
       z-index:4;
       transform-origin:top;
@@ -131,7 +93,6 @@
     .play .flip-top{
       animation: flipTop .42s cubic-bezier(.22,.61,.36,1) forwards;
     }
-
     .play .flip-bottom{
       animation: flipBottom .42s cubic-bezier(.22,.61,.36,1) .42s forwards;
     }
@@ -140,18 +101,14 @@
       0%{ transform:rotateX(0deg); }
       100%{ transform:rotateX(-90deg); }
     }
-
     @keyframes flipBottom{
       0%{ transform:rotateX(90deg); }
       100%{ transform:rotateX(0deg); }
     }
 
     .hinge{
-      position:absolute;
-      top:50%;
-      left:0;
-      width:100%;
-      height:3px;
+      position:absolute; top:50%; left:0;
+      width:100%; height:3px;
       transform:translateY(-50%);
       background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.9));
       z-index:20;
@@ -169,7 +126,6 @@
       <div class="separator">:</div>
       <div class="group" id="seconds"></div>
     </div>
-
     <div class="row" id="date"></div>
     <div class="row" id="day"></div>
   </div>
