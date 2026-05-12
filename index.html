@@ -1,349 +1,598 @@
+```html
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Notion Flip Clock V6.6 (Date/Day Shrink to Time Width)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Notion Flip Clock Ultimate</title>
 
 <style>
-  :root{
-    --flipW: 68px;
-    --flipH: 84px;
-    --gap: 6px;
-    --colonW: 19px;
 
-    /* time row items: flip, flip, colon, flip, flip => gaps are 4 */
-    --timeRowW: calc((4 * var(--flipW)) + var(--colonW) + (4 * var(--gap)));
+:root{
 
-    /* 날짜/요일을 시간폭에 맞추기 위한 축소 비율 (현재 카드 기준) */
-    --dateScale: 0.54; /* 8칸 날짜를 시간폭에 “대략” 맞추는 값 */
-    --dayScale: 0.49;  /* 요일은 더 작게 */
-  }
+--bg:#05070f;
+--card1:#232633;
+--card2:#171922;
+--line:#0d0f15;
+--text:#f5f7ff;
 
-  body{
-    margin:0;
-    background:#05070f;
-    font-family: Arial, Helvetica, sans-serif;
-    color:white;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-  }
+--big-w:84px;
+--big-h:102px;
 
-  .wrapper{ text-align:center; }
+--small-w:58px;
+--small-h:72px;
 
-  .row{
-    display:flex;
-    justify-content:center;
-    gap:var(--gap);
-    margin:6px auto;
-    align-items:center;
-    flex-wrap:nowrap;
+}
 
-    /* 핵심: 모든 행의 기준 폭은 “시간 행 폭” */
-    width: var(--timeRowW);
-  }
+*{
+box-sizing:border-box;
+}
 
-  .flip{
-    position:relative;
-    width:var(--flipW);
-    height:var(--flipH);
-    perspective:779px;
-    flex: 0 0 auto;
-  }
+body{
 
-  .card{
-    position:absolute;
-    inset:0;
-    border-radius:10px;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,0) 35%),
-      linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.30));
-    border:1px solid rgba(255,255,255,.08);
-    box-shadow: 0 12px 28px rgba(0,0,0,.45);
-    display:grid;
-    place-items:center;
+margin:0;
 
-    font-size:48px;
-    font-weight:800;
-    line-height:1;
-    font-variant-numeric: tabular-nums;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: geometricPrecision;
+background:
+radial-gradient(
+circle at top,
+#0d1324 0%,
+#05070f 70%
+);
 
-    transform-style: preserve-3d;
-    backface-visibility: hidden;
-  }
+font-family:
+Inter,
+system-ui,
+sans-serif;
 
-  /* 시간은 크게 */
-  #timeRow .card{
-    font-size:58px;
-    letter-spacing: 0.5px;
-  }
+display:flex;
+justify-content:center;
+align-items:center;
 
-  /* 날짜/요일은 행 전체를 축소해서 시간폭에 “맞춰” 보이게 */
-  #dateRow{
-    transform: scale(var(--dateScale));
-    transform-origin: center;
-  }
-  #dayRow{
-    transform: scale(var(--dayScale));
-    transform-origin: center;
-  }
+min-height:100vh;
 
-  /* 축소해도 행 간격은 보기 좋게 */
-  #dateRow{ margin-top: 2px; }
-  #dayRow{ margin-top: 2px; }
+color:white;
 
-  .hinge{
-    position:absolute;
-    left:10px;
-    right:10px;
-    top:50%;
-    height:1px;
-    background: rgba(255,255,255,.10);
-    transform: translateY(-0.5px);
-    pointer-events:none;
-  }
+overflow:hidden;
 
-  .card.current{ z-index:2; transform: rotateX(0deg); }
-  .card.next{
-    z-index:1;
-    opacity:0;
-    transform: rotateX(90deg);
-  }
+}
 
-  .flip.play .card.current{ animation: flipOut 320ms ease-in forwards; }
-  .flip.play .card.next{ opacity:1; animation: flipIn 320ms ease-out forwards; }
+.clock{
+text-align:center;
+padding:24px;
+width:100%;
+}
 
-  @keyframes flipOut{
-    from { transform: rotateX(0deg); }
-    to   { transform: rotateX(-90deg); opacity:0.15; }
-  }
-  @keyframes flipIn{
-    from { transform: rotateX(90deg); }
-    to   { transform: rotateX(0deg); }
-  }
+.row{
 
-  .colon{
-    font-size:58px;
-    font-weight:800;
-    opacity:.85;
-    transform: translateY(-2px);
-    width:var(--colonW);
-    text-align:center;
-    flex: 0 0 auto;
-  }
+display:flex;
+justify-content:center;
+align-items:center;
 
-  .controls{
-    margin-top:10px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:10px;
-  }
+gap:14px;
 
-  .btn{
-    padding:6px 10px;
-    border-radius:8px;
-    border:1px solid rgba(255,255,255,.12);
-    background:#0b0d14;
-    color:#fff;
-    cursor:pointer;
-    font-size:12px;
-    opacity:.95;
-  }
+margin:12px 0;
 
-  .badge{
-    font-size:12px;
-    opacity:.75;
-    padding:6px 10px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,.10);
-    background: rgba(255,255,255,.04);
-  }
+flex-wrap:wrap;
 
-  .settings{
-    margin-top:10px;
-    display:none;
-    gap:8px;
-    justify-content:center;
-    align-items:center;
-    flex-wrap:wrap;
-    opacity:.95;
-  }
+}
 
-  .settings input{
-    width:90px;
-    padding:6px 8px;
-    border-radius:8px;
-    border:1px solid rgba(255,255,255,.12);
-    background:#0b0d14;
-    color:#fff;
-    outline:none;
-  }
+.group{
+display:flex;
+gap:10px;
+}
+
+.separator{
+
+font-size:42px;
+font-weight:700;
+
+opacity:.75;
+
+transform:translateY(-3px);
+
+}
+
+.flip{
+
+position:relative;
+
+perspective:1200px;
+
+transition:
+transform .25s ease,
+filter .25s ease;
+
+}
+
+.flip:hover{
+
+transform:translateY(-2px);
+
+filter:
+drop-shadow(0 0 12px rgba(255,255,255,.08));
+
+}
+
+.big{
+
+width:var(--big-w);
+height:var(--big-h);
+
+}
+
+.small{
+
+width:var(--small-w);
+height:var(--small-h);
+
+}
+
+.top,
+.bottom,
+.flip-top,
+.flip-bottom{
+
+position:absolute;
+
+left:0;
+
+width:100%;
+height:50%;
+
+overflow:hidden;
+
+background:
+linear-gradient(
+180deg,
+var(--card1) 0%,
+var(--card2) 100%
+);
+
+border:
+1px solid rgba(255,255,255,.05);
+
+box-shadow:
+inset 0 1px 0 rgba(255,255,255,.04);
+
+}
+
+.top,
+.flip-top{
+
+top:0;
+
+border-radius:12px 12px 0 0;
+
+}
+
+.bottom,
+.flip-bottom{
+
+bottom:0;
+
+border-radius:0 0 12px 12px;
+
+}
+
+.top span,
+.bottom span,
+.flip-top span,
+.flip-bottom span{
+
+position:absolute;
+
+left:50%;
+
+font-weight:700;
+
+letter-spacing:-2px;
+
+transform:translateX(-50%);
+
+white-space:nowrap;
+
+}
+
+/* BIG */
+
+.big .top span,
+.big .bottom span,
+.big .flip-top span,
+.big .flip-bottom span{
+
+font-size:64px;
+line-height:102px;
+
+}
+
+/* SMALL */
+
+.small .top span,
+.small .bottom span,
+.small .flip-top span,
+.small .flip-bottom span{
+
+font-size:36px;
+line-height:72px;
+
+}
+
+/* 핵심 clipping */
+
+.top span,
+.flip-top span{
+
+top:50%;
+
+transform:
+translateX(-50%)
+translateY(-100%);
+
+}
+
+.bottom span,
+.flip-bottom span{
+
+top:-50%;
+
+transform:
+translateX(-50%);
+
+}
+
+.flip-top{
+
+z-index:5;
+
+transform-origin:bottom;
+
+backface-visibility:hidden;
+
+}
+
+.flip-bottom{
+
+z-index:4;
+
+transform-origin:top;
+
+transform:rotateX(90deg);
+
+backface-visibility:hidden;
+
+}
+
+.play .flip-top{
+
+animation:
+flipTop .42s
+cubic-bezier(.22,.61,.36,1)
+forwards;
+
+}
+
+.play .flip-bottom{
+
+animation:
+flipBottom .42s
+cubic-bezier(.22,.61,.36,1)
+.42s
+forwards;
+
+}
+
+@keyframes flipTop{
+
+0%{
+transform:rotateX(0deg);
+}
+
+100%{
+transform:rotateX(-90deg);
+}
+
+}
+
+@keyframes flipBottom{
+
+0%{
+transform:rotateX(90deg);
+}
+
+100%{
+transform:rotateX(0deg);
+}
+
+}
+
+.hinge{
+
+position:absolute;
+
+top:50%;
+left:0;
+
+width:100%;
+height:3px;
+
+transform:translateY(-50%);
+
+background:
+linear-gradient(
+180deg,
+rgba(255,255,255,.05),
+rgba(0,0,0,.9)
+);
+
+z-index:20;
+
+box-shadow:
+0 1px 4px rgba(0,0,0,.9);
+
+}
+
+@media(max-width:768px){
+
+:root{
+
+--big-w:64px;
+--big-h:82px;
+
+--small-w:46px;
+--small-h:58px;
+
+}
+
+.big .top span,
+.big .bottom span,
+.big .flip-top span,
+.big .flip-bottom span{
+
+font-size:48px;
+line-height:82px;
+
+}
+
+.separator{
+font-size:32px;
+}
+
+}
+
 </style>
 </head>
 
 <body>
-<div class="wrapper">
-  <div class="row" id="timeRow"></div>
-  <div class="row" id="dateRow"></div>
-  <div class="row" id="dayRow"></div>
 
-  <div class="controls">
-    <button class="btn" id="tzToggle" type="button">Timezone ▸</button>
-    <div class="badge" id="tzBadge">GMT+9</div>
-  </div>
+<div class="clock">
 
-  <div class="settings" id="settingsPanel">
-    <span style="font-size:12px; opacity:.75;">GMT offset</span>
-    <input id="gmtOffsetInput" type="number" step="0.5" min="-12" max="14">
-    <button class="btn" id="applyBtn" type="button">Apply</button>
-    <button class="btn" id="resetBtn" type="button">Reset KST</button>
-  </div>
+<div class="row">
+
+<div class="group" id="hours"></div>
+
+<div class="separator">:</div>
+
+<div class="group" id="minutes"></div>
+
+<div class="separator">:</div>
+
+<div class="group" id="seconds"></div>
+
+</div>
+
+<div class="row" id="date"></div>
+
+<div class="row" id="day"></div>
+
 </div>
 
 <script>
-  const STORAGE_KEY = "notionFlipClock.gmtOffsetHours.v6";
-  const DEFAULT_OFFSET = 9; // KST
 
-  function pad2(n){ return String(n).padStart(2,"0"); }
+const timezone =
+Intl.DateTimeFormat()
+.resolvedOptions()
+.timeZone
 
-  function loadOffset(){
-    const v = Number(localStorage.getItem(STORAGE_KEY));
-    return Number.isFinite(v) ? v : DEFAULT_OFFSET;
-  }
-  function saveOffset(v){ localStorage.setItem(STORAGE_KEY, String(v)); }
-  function clampOffset(v){
-    if(!Number.isFinite(v)) return DEFAULT_OFFSET;
-    return Math.max(-12, Math.min(14, v));
-  }
+function createDigit(small=false){
 
-  let offsetHours = loadOffset();
+const d=document.createElement("div")
 
-  const gmtOffsetInput = document.getElementById("gmtOffsetInput");
-  const applyBtn = document.getElementById("applyBtn");
-  const resetBtn = document.getElementById("resetBtn");
+d.className=
+`flip ${small?"small":"big"}`
 
-  const tzToggle = document.getElementById("tzToggle");
-  const settingsPanel = document.getElementById("settingsPanel");
-  const tzBadge = document.getElementById("tzBadge");
+d.innerHTML=`
 
-  function setBadge(){
-    const sign = offsetHours >= 0 ? "+" : "";
-    tzBadge.textContent = `GMT${sign}${offsetHours}`;
-    gmtOffsetInput.value = offsetHours;
-  }
+<div class="top">
+<span>0</span>
+</div>
 
-  tzToggle.addEventListener("click", () => {
-    const isOpen = settingsPanel.style.display === "flex";
-    settingsPanel.style.display = isOpen ? "none" : "flex";
-    tzToggle.textContent = isOpen ? "Timezone ▸" : "Timezone ▾";
-  });
+<div class="bottom">
+<span>0</span>
+</div>
 
-  function buildRow(el, count){
-    const arr = [];
-    for(let i=0;i<count;i++){
-      const flip = document.createElement("div");
-      flip.className = "flip";
-      flip.innerHTML = `
-        <div class="card current">0</div>
-        <div class="card next">0</div>
-        <div class="hinge"></div>
-      `;
-      el.appendChild(flip);
-      arr.push(flip);
-    }
-    return arr;
-  }
+<div class="flip-top">
+<span>0</span>
+</div>
 
-  const timeRow = document.getElementById("timeRow");
-  const dateRow = document.getElementById("dateRow");
-  const dayRow  = document.getElementById("dayRow");
+<div class="flip-bottom">
+<span>0</span>
+</div>
 
-  const timeDigitsLeft  = buildRow(timeRow, 2);
-  const colon = document.createElement("div");
-  colon.className = "colon";
-  colon.textContent = ":";
-  timeRow.appendChild(colon);
-  const timeDigitsRight = buildRow(timeRow, 2);
-  const timeDigits = [...timeDigitsLeft, ...timeDigitsRight];
+<div class="hinge"></div>
 
-  const dateDigits = buildRow(dateRow, 8); // YY.MM.DD
-  const dayDigits  = buildRow(dayRow, 3);  // DDD
+`
 
-  function flipTo(flipEl, val){
-    const cur = flipEl.querySelector(".card.current");
-    const next = flipEl.querySelector(".card.next");
-    if(cur.textContent === val) return;
+return d
 
-    next.textContent = val;
+}
 
-    flipEl.classList.remove("play");
-    void flipEl.offsetWidth;
-    flipEl.classList.add("play");
+function build(container,count,small=false){
 
-    setTimeout(() => {
-      cur.textContent = val;
-      flipEl.classList.remove("play");
-    }, 360);
-  }
+const arr=[]
 
-  function getDisplayDate(){
-    const nowMs = Date.now();
-    const offsetMs = offsetHours * 60 * 60 * 1000;
-    return new Date(nowMs + offsetMs);
-  }
+for(let i=0;i<count;i++){
 
-  function tick(){
-    const d = getDisplayDate();
+const d=createDigit(small)
 
-    const HH = pad2(d.getUTCHours());
-    const MM = pad2(d.getUTCMinutes());
+container.appendChild(d)
 
-    const yy = pad2(d.getUTCFullYear() % 100);
-    const mo = pad2(d.getUTCMonth() + 1);
-    const da = pad2(d.getUTCDate());
+arr.push(d)
 
-    const days = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-    const DDD = days[d.getUTCDay()];
+}
 
-    const time = HH + MM;             // 4
-    const date = `${yy}.${mo}.${da}`; // 8
+return arr
 
-    timeDigits.forEach((f,i) => flipTo(f, time[i]));
-    dateDigits.forEach((f,i) => flipTo(f, date[i]));
-    dayDigits.forEach((f,i)  => flipTo(f, DDD[i]));
-  }
+}
 
-  function scheduleToNextSecond(){
-    const d = getDisplayDate();
-    const ms = d.getUTCMilliseconds();
-    const wait = 1000 - ms + 8;
-    setTimeout(() => {
-      tick();
-      scheduleToNextSecond();
-    }, Math.max(50, wait));
-  }
+const hourDigits=
+build(
+document.getElementById("hours"),
+2
+)
 
-  applyBtn.addEventListener("click", () => {
-    offsetHours = clampOffset(Number(gmtOffsetInput.value));
-    saveOffset(offsetHours);
-    setBadge();
-    tick();
-  });
+const minuteDigits=
+build(
+document.getElementById("minutes"),
+2
+)
 
-  resetBtn.addEventListener("click", () => {
-    offsetHours = DEFAULT_OFFSET;
-    saveOffset(offsetHours);
-    setBadge();
-    tick();
-  });
+const secondDigits=
+build(
+document.getElementById("seconds"),
+2
+)
 
-  setBadge();
-  tick();
-  scheduleToNextSecond();
+const dateDigits=
+build(
+document.getElementById("date"),
+6,
+true
+)
+
+const dayDigits=
+build(
+document.getElementById("day"),
+3,
+true
+)
+
+function flip(el,newVal){
+
+const top=
+el.querySelector(".top span")
+
+const bottom=
+el.querySelector(".bottom span")
+
+const flipTop=
+el.querySelector(".flip-top span")
+
+const flipBottom=
+el.querySelector(".flip-bottom span")
+
+if(top.textContent===newVal)return
+
+flipTop.textContent=top.textContent
+
+flipBottom.textContent=newVal
+
+el.classList.remove("play")
+
+void el.offsetWidth
+
+el.classList.add("play")
+
+setTimeout(()=>{
+
+top.textContent=newVal
+bottom.textContent=newVal
+
+el.classList.remove("play")
+
+},850)
+
+}
+
+function now(){
+
+return new Date(
+new Date().toLocaleString(
+"en-US",
+{
+timeZone:timezone
+}
+)
+)
+
+}
+
+function update(){
+
+const n=now()
+
+const hh=
+String(n.getHours())
+.padStart(2,"0")
+
+const mm=
+String(n.getMinutes())
+.padStart(2,"0")
+
+const ss=
+String(n.getSeconds())
+.padStart(2,"0")
+
+const yy=
+String(n.getFullYear())
+.slice(2)
+
+const mo=
+String(n.getMonth()+1)
+.padStart(2,"0")
+
+const dd=
+String(n.getDate())
+.padStart(2,"0")
+
+const day=
+n.toLocaleDateString(
+"en-US",
+{
+weekday:"short"
+}
+).toUpperCase()
+
+hourDigits.forEach((d,i)=>
+flip(d,hh[i])
+)
+
+minuteDigits.forEach((d,i)=>
+flip(d,mm[i])
+)
+
+secondDigits.forEach((d,i)=>
+flip(d,ss[i])
+)
+
+const dateStr=yy+mo+dd
+
+dateDigits.forEach((d,i)=>
+flip(d,dateStr[i])
+)
+
+dayDigits.forEach((d,i)=>
+flip(d,day[i])
+)
+
+}
+
+setInterval(update,1000)
+
+update()
+
 </script>
+
 </body>
 </html>
+```
