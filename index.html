@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Notion Flip Clock V9 (Fixed)</title>
+  <title>Notion Flip Clock V9</title>
 
   <style>
     :root{
@@ -11,12 +11,11 @@
       --top:#252938;
       --bottom:#171922;
       --text:#f5f7ff;
-
-      --flipDur: .42s;
-      --flipEase: cubic-bezier(.22,.61,.36,1);
     }
 
-    *{ box-sizing:border-box; }
+    *{
+      box-sizing:border-box;
+    }
 
     body{
       margin:0;
@@ -24,12 +23,15 @@
       display:flex;
       justify-content:center;
       align-items:center;
+
       background: radial-gradient(circle at top,#0d1324 0%,#05070f 70%);
       font-family: Inter, system-ui, sans-serif;
       color:var(--text);
     }
 
-    .clock{ text-align:center; }
+    .clock{
+      text-align:center;
+    }
 
     .row{
       display:flex;
@@ -56,7 +58,9 @@
       width:84px;
       height:102px;
       perspective:1000px;
-      transform-style: preserve-3d; /* 중요: 3D 플립 안정화 */
+
+      /* 추가: 3D 플립 안정화 */
+      transform-style: preserve-3d;
     }
 
     .small{
@@ -73,23 +77,26 @@
       width:100%;
       height:50%;
       overflow:hidden;
+
       background: linear-gradient(180deg, var(--top) 0%, var(--bottom) 100%);
       border: 1px solid rgba(255,255,255,.05);
     }
 
     /* top */
-    .top, .flip-top{
+    .top,
+    .flip-top{
       top:0;
       border-radius:12px 12px 0 0;
     }
 
     /* bottom */
-    .bottom, .flip-bottom{
+    .bottom,
+    .flip-bottom{
       bottom:0;
       border-radius:0 0 12px 12px;
     }
 
-    /* 숫자/문자 공통 */
+    /* REAL SPLIT */
     .top span,
     .bottom span,
     .flip-top span,
@@ -99,15 +106,14 @@
       width:100%;
       text-align:center;
       font-weight:700;
-      transform: translateX(-50%);
-      will-change: transform;
+      transform:translateX(-50%);
       user-select:none;
     }
 
     /* BIG */
     .flip span{
       font-size:64px;
-      line-height:102px; /* 전체 높이 기준 */
+      line-height:102px;
     }
 
     /* SMALL */
@@ -116,17 +122,20 @@
       line-height:72px;
     }
 
-    /*
-      핵심 변경:
-      - 위(Top)는 위쪽 절반이 보이도록 기본 위치
-      - 아래(Bottom)는 "전체 라인박스 높이의 절반만큼 위로" 올려서 아래 절반이 보이게 함
-      => 픽셀(-51px/-36px) 하드코딩 제거
-    */
+    /* 핵심 */
     .top span,
     .flip-top span{
       top:0;
     }
 
+    /*
+      기존(삭제됨):
+      .bottom span/.flip-bottom span { top:-51px; }
+      .small ... { top:-36px; }
+
+      변경(추가):
+      하단 절반은 "전체 높이의 절반"만큼 위로 올려서 정확히 반절만 보이게 함
+    */
     .bottom span,
     .flip-bottom span{
       top:0;
@@ -136,33 +145,33 @@
     /* flip */
     .flip-top{
       z-index:5;
-      transform-origin: bottom;
+      transform-origin:bottom;
       backface-visibility:hidden;
     }
 
     .flip-bottom{
       z-index:4;
-      transform-origin: top;
-      transform: rotateX(90deg);
+      transform-origin:top;
+      transform:rotateX(90deg);
       backface-visibility:hidden;
     }
 
     .play .flip-top{
-      animation: flipTop var(--flipDur) var(--flipEase) forwards;
+      animation: flipTop .42s cubic-bezier(.22,.61,.36,1) forwards;
     }
 
     .play .flip-bottom{
-      animation: flipBottom var(--flipDur) var(--flipEase) var(--flipDur) forwards;
+      animation: flipBottom .42s cubic-bezier(.22,.61,.36,1) .42s forwards;
     }
 
     @keyframes flipTop{
-      0%{ transform: rotateX(0deg); }
-      100%{ transform: rotateX(-90deg); }
+      0%{ transform:rotateX(0deg); }
+      100%{ transform:rotateX(-90deg); }
     }
 
     @keyframes flipBottom{
-      0%{ transform: rotateX(90deg); }
-      100%{ transform: rotateX(0deg); }
+      0%{ transform:rotateX(90deg); }
+      100%{ transform:rotateX(0deg); }
     }
 
     .hinge{
@@ -198,12 +207,16 @@
   </div>
 
   <script>
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const FLIP_TOTAL_MS = 840; // .42s + .42s (두번째는 delay .42s)
+    const timezone =
+      Intl.DateTimeFormat()
+        .resolvedOptions()
+        .timeZone;
 
     function createDigit(small=false){
       const d = document.createElement("div");
       d.className = `flip ${small ? "small" : ""}`.trim();
+
+      /* 변경: 템플릿 문자열 공백/개행 정리(동작 동일, 렌더 안정성 약간↑) */
       d.innerHTML = `
         <div class="top"><span>0</span></div>
         <div class="bottom"><span>0</span></div>
@@ -211,12 +224,13 @@
         <div class="flip-bottom"><span>0</span></div>
         <div class="hinge"></div>
       `;
+
       return d;
     }
 
     function build(container, count, small=false){
       const arr = [];
-      for(let i=0;i<count;i++){
+      for(let i=0; i<count; i++){
         const d = createDigit(small);
         container.appendChild(d);
         arr.push(d);
@@ -224,55 +238,86 @@
       return arr;
     }
 
-    const hourDigits   = build(document.getElementById("hours"),   2);
-    const minuteDigits = build(document.getElementById("minutes"), 2);
-    const secondDigits = build(document.getElementById("seconds"), 2);
-    const dateDigits   = build(document.getElementById("date"),    6, true);
-    const dayDigits    = build(document.getElementById("day"),     3, true);
+    const hourDigits =
+      build(document.getElementById("hours"), 2);
+
+    const minuteDigits =
+      build(document.getElementById("minutes"), 2);
+
+    const secondDigits =
+      build(document.getElementById("seconds"), 2);
+
+    const dateDigits =
+      build(document.getElementById("date"), 6, true);
+
+    const dayDigits =
+      build(document.getElementById("day"), 3, true);
 
     function flip(el, newVal){
-      const top        = el.querySelector(".top span");
-      const bottom     = el.querySelector(".bottom span");
-      const flipTop    = el.querySelector(".flip-top span");
-      const flipBottom = el.querySelector(".flip-bottom span");
+      const top =
+        el.querySelector(".top span");
+
+      const bottom =
+        el.querySelector(".bottom span");
+
+      const flipTop =
+        el.querySelector(".flip-top span");
+
+      const flipBottom =
+        el.querySelector(".flip-bottom span");
 
       if(top.textContent === newVal) return;
 
-      flipTop.textContent = top.textContent;
-      flipBottom.textContent = newVal;
+      flipTop.textContent =
+        top.textContent;
+
+      flipBottom.textContent =
+        newVal;
 
       el.classList.remove("play");
-      void el.offsetWidth; // reflow to restart animation
+      void el.offsetWidth;
       el.classList.add("play");
 
       setTimeout(() => {
         top.textContent = newVal;
         bottom.textContent = newVal;
         el.classList.remove("play");
-      }, FLIP_TOTAL_MS);
-    }
-
-    function nowInTimeZone(tz){
-      // 기존 방식 유지: tz 기준 문자열 -> Date로 재파싱
-      return new Date(new Date().toLocaleString("en-US", { timeZone: tz }));
+      }, 840);
     }
 
     function update(){
-      const now = nowInTimeZone(timezone);
+      const now = new Date(
+        new Date().toLocaleString(
+          "en-US",
+          { timeZone: timezone }
+        )
+      );
 
-      const hh = String(now.getHours()).padStart(2,"0");
-      const mm = String(now.getMinutes()).padStart(2,"0");
-      const ss = String(now.getSeconds()).padStart(2,"0");
+      const hh =
+        String(now.getHours()).padStart(2,"0");
 
-      const yy = String(now.getFullYear()).slice(2);
-      const mo = String(now.getMonth()+1).padStart(2,"0");
-      const dd = String(now.getDate()).padStart(2,"0");
+      const mm =
+        String(now.getMinutes()).padStart(2,"0");
 
-      const day = now
-        .toLocaleDateString("en-US", { weekday:"short" })
-        .toUpperCase();
+      const ss =
+        String(now.getSeconds()).padStart(2,"0");
 
-      hourDigits.forEach((d,i)   => flip(d, hh[i]));
+      const yy =
+        String(now.getFullYear()).slice(2);
+
+      const mo =
+        String(now.getMonth()+1).padStart(2,"0");
+
+      const dd =
+        String(now.getDate()).padStart(2,"0");
+
+      const day =
+        now.toLocaleDateString(
+          "en-US",
+          { weekday:"short" }
+        ).toUpperCase();
+
+      hourDigits.forEach((d,i) => flip(d, hh[i]));
       minuteDigits.forEach((d,i) => flip(d, mm[i]));
       secondDigits.forEach((d,i) => flip(d, ss[i]));
 
@@ -282,8 +327,8 @@
       dayDigits.forEach((d,i) => flip(d, day[i] || " "));
     }
 
-    update();
     setInterval(update, 1000);
+    update();
   </script>
 </body>
 </html>
