@@ -1,218 +1,216 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Notion Flip Clock V9</title>
-  <style>
-    :root{
-      --top:#252938;
-      --bottom:#171922;
-      --text:#f5f7ff;
-    }
-    *{ box-sizing:border-box; }
+<meta charset="UTF-8">
+<title>Notion LCD Clock V12</title>
+<style>
+  /* DSEG 7-segment & 14-segment (Keshikan / OFL) */
+  @font-face{
+    font-family:'DSEG7';
+    src:url('https://cdn.jsdelivr.net/gh/keshikan/DSEG@v0.46/fonts/DSEG7-Classic/DSEG7Classic-Bold.woff2') format('woff2');
+    font-display:swap;
+  }
+  @font-face{
+    font-family:'DSEG14';
+    src:url('https://cdn.jsdelivr.net/gh/keshikan/DSEG@v0.46/fonts/DSEG14-Classic/DSEG14Classic-Bold.woff2') format('woff2');
+    font-display:swap;
+  }
 
-    body{
-      margin:0; min-height:100vh;
-      display:flex; justify-content:center; align-items:center;
-      background: radial-gradient(circle at top,#0d1324 0%,#05070f 70%);
-      font-family: Inter, system-ui, sans-serif;
-      color:var(--text);
-    }
-    .clock{ text-align:center; }
-    .row{ display:flex; justify-content:center; align-items:center; gap:14px; margin:14px 0; }
-    .group{ display:flex; gap:10px; }
-    .separator{ font-size:42px; font-weight:700; opacity:.7; line-height:1; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    display:flex; align-items:center; justify-content:center;
+    background:transparent;
+    font-family:'DSEG7','Courier New',monospace;
+    color:#1d1e22;
+    padding:24px;
+  }
 
-    .flip{
-      position:relative;
-      width:84px; height:102px;
-      perspective:1000px;
-      transform-style: preserve-3d;
+  .clock{
+    --body:#f1ede4;
+    --screen-a:#d4dac9;
+    --screen-b:#c5ccba;
+    --ink:#1d1e22;
+    --ghost:rgba(29,30,34,0.08);
 
-      --h: 102px;
+    width:660px; max-width:100%;
+    padding:34px 26px;
+    background:var(--body);
+    border-radius:26px;
+    box-shadow:
+      0 16px 32px rgba(0,0,0,0.14),
+      inset 0 1px 0 rgba(255,255,255,0.85),
+      inset 0 -3px 6px rgba(0,0,0,0.08);
+  }
 
-      /* ▼ 폰트 보정값. 위/아래가 어긋나면 이 값만 조절(예: 2px, 3px, 4px, -2px 등) */
-      --tweak: 3px;
-    }
+  .screen{
+    position:relative;
+    padding:22px 28px 20px;
+    background:linear-gradient(180deg,var(--screen-b) 0%,var(--screen-a) 25%,var(--screen-a) 75%,var(--screen-b) 100%);
+    border-radius:6px;
+    box-shadow:
+      inset 0 3px 6px rgba(0,0,0,0.18),
+      inset 0 -1px 2px rgba(255,255,255,0.4);
+    overflow:hidden;
+  }
+  .screen::after{ /* 가로 스캔라인 */
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(180deg,rgba(0,0,0,0.018) 0 1px,transparent 1px 3px);
+  }
 
-    .small{
-      width:58px; height:72px;
-      --h: 72px;
-      --tweak: 2px;   /* 작은 카드는 보통 조금 더 작게 */
-    }
+  .row{ display:flex; align-items:stretch; justify-content:flex-start; gap:10px; position:relative; }
 
-    .top, .bottom, .flip-top, .flip-bottom{
-      position:absolute; left:0;
-      width:100%; height:50%;
-      overflow:hidden;
-      background: linear-gradient(180deg, var(--top) 0%, var(--bottom) 100%);
-      border: 1px solid rgba(255,255,255,.05);
-    }
+  /* ───── 좌측 ───── */
+  .left{ position:relative; display:flex; align-items:flex-end; gap:12px; padding-top:22px; }
+  .ampm{
+    position:absolute; top:0; left:2px;
+    font-family:'DSEG14','Courier New',monospace;
+    font-size:16px; letter-spacing:2px; color:var(--ink);
+  }
 
-    .top, .flip-top{ top:0; border-radius:12px 12px 0 0; }
-    .bottom, .flip-bottom{ bottom:0; border-radius:0 0 12px 12px; }
+  /* HH:MM (with ghost) */
+  .hm-wrap{ position:relative; line-height:.85; }
+  .hm, .hm-ghost{
+    font-size:104px; letter-spacing:2px;
+    font-family:'DSEG7','Courier New',monospace;
+    font-weight:700;
+  }
+  .hm-ghost{
+    position:absolute; inset:0;
+    color:var(--ghost); pointer-events:none; user-select:none;
+  }
+  .hm{ position:relative; color:var(--ink); }
 
-    /* 모든 span은 카드 "전체 높이"의 컨테이너에 flex로 정확히 중앙 정렬
-       → 상단/하단 span 모두 .flip 좌표 기준 같은 위치에 글자가 놓여서 자동 정렬
-       → 폰트 메트릭 어긋남은 --tweak로 일괄 보정 */
+  /* SS (with ghost) */
+  .sec-wrap{ position:relative; align-self:flex-start; margin-top:14px; line-height:1; }
+  .sec, .sec-ghost{
+    font-size:44px;
+    font-family:'DSEG7','Courier New',monospace;
+    font-weight:700;
+  }
+  .sec-ghost{
+    position:absolute; inset:0;
+    color:var(--ghost); pointer-events:none; user-select:none;
+  }
+  .sec{ position:relative; color:var(--ink); }
 
-    .top span, .flip-top span,
-    .bottom span, .flip-bottom span{
-      position:absolute;
-      left:0;
-      width:100%;
-      height: var(--h);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:700;
-      line-height:1;
-      user-select:none;
-      transform: translateY(var(--tweak)); /* 폰트 보정 */
-    }
-
-    .top span, .flip-top span{ top:0; }
-    .bottom span, .flip-bottom span{ bottom:0; }
-
-    .flip span{ font-size:64px; }
-    .small span{ font-size:36px; }
-
-    .flip-top{
-      z-index:5;
-      transform-origin:bottom;
-      backface-visibility:hidden;
-    }
-    .flip-bottom{
-      z-index:4;
-      transform-origin:top;
-      transform:rotateX(90deg);
-      backface-visibility:hidden;
-    }
-
-    .play .flip-top{
-      animation: flipTop .42s cubic-bezier(.22,.61,.36,1) forwards;
-    }
-    .play .flip-bottom{
-      animation: flipBottom .42s cubic-bezier(.22,.61,.36,1) .42s forwards;
-    }
-
-    @keyframes flipTop{
-      0%{ transform:rotateX(0deg); }
-      100%{ transform:rotateX(-90deg); }
-    }
-    @keyframes flipBottom{
-      0%{ transform:rotateX(90deg); }
-      100%{ transform:rotateX(0deg); }
-    }
-
-    .hinge{
-      position:absolute; top:50%; left:0;
-      width:100%; height:3px;
-      transform:translateY(-50%);
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.9));
-      z-index:20;
-      pointer-events:none;
-    }
-  </style>
+  /* ───── 우측 ───── */
+  .right{
+    display:flex; flex-direction:column; justify-content:space-between;
+    align-items:flex-end; padding:22px 0 6px; gap:10px;
+  }
+  .date-line{
+    display:flex; align-items:baseline; gap:12px;
+    font-size:30px; color:var(--ink);
+  }
+  .wd{ font-family:'DSEG14','Courier New',monospace; font-size:22px; letter-spacing:2px; }
+  .week{
+    display:flex; align-items:baseline; gap:4px;
+    font-size:22px; color:var(--ink);
+  }
+  .week .lbl{ font-family:'DSEG14','Courier New',monospace; letter-spacing:2px; }
+</style>
 </head>
-
 <body>
-  <div class="clock">
+
+<div class="clock">
+  <div class="screen">
     <div class="row">
-      <div class="group" id="hours"></div>
-      <div class="separator">:</div>
-      <div class="group" id="minutes"></div>
-      <div class="separator">:</div>
-      <div class="group" id="seconds"></div>
+
+      <!-- LEFT -->
+      <div class="left">
+        <span class="ampm" id="ampm">--</span>
+
+        <span class="hm-wrap">
+          <span class="hm-ghost" aria-hidden="true">88:88</span>
+          <span class="hm"><span id="hh">--</span>:<span id="mm">--</span></span>
+        </span>
+
+        <span class="sec-wrap">
+          <span class="sec-ghost" aria-hidden="true">88</span>
+          <span class="sec" id="ss">--</span>
+        </span>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="right">
+        <div class="date-line">
+          <span><span id="mo">--</span>/<span id="dd">--</span></span>
+          <span class="wd" id="wd">---</span>
+        </div>
+        <div class="week">
+          <span class="lbl">W</span><span id="wk">--</span>
+        </div>
+      </div>
+
     </div>
-    <div class="row" id="date"></div>
-    <div class="row" id="day"></div>
   </div>
+</div>
 
-  <script>
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+<script>
+(function(){
+  const KST = "Asia/Seoul";
 
-    function createDigit(small=false){
-      const d = document.createElement("div");
-      d.className = `flip ${small ? "small" : ""}`.trim();
-      d.innerHTML = `
-        <div class="top"><span>0</span></div>
-        <div class="bottom"><span>0</span></div>
-        <div class="flip-top"><span>0</span></div>
-        <div class="flip-bottom"><span>0</span></div>
-        <div class="hinge"></div>
-      `;
-      return d;
+  // ISO 8601 주차 (월요일 시작, 1/4 포함 주 = W01)
+  function getISOWeek(y, m, d){
+    const t = new Date(Date.UTC(y, m - 1, d));
+    const dayNum = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil(((t - yearStart) / 86400000 + 1) / 7);
+  }
+
+  const $ = id => document.getElementById(id);
+  const set = (id, v) => { const el = $(id); if (el && el.textContent !== v) el.textContent = v; };
+
+  function tick(){
+    try{
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: KST, hour12: false,
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+        weekday: "short"
+      }).formatToParts(new Date());
+      const get = k => (parts.find(p => p.type === k) || {}).value || "";
+
+      let hh = get("hour"); if (hh === "24") hh = "00";
+      const mi = get("minute"), ss = get("second");
+      const mo = get("month"), dd = get("day"), yy = get("year");
+      const wd = (get("weekday") || "").toUpperCase();
+
+      const h24 = parseInt(hh, 10);
+      set("ampm", h24 < 12 ? "AM" : "PM");
+      let h12 = h24 % 12; if (h12 === 0) h12 = 12;
+      set("hh", String(h12).padStart(2, "0"));
+      set("mm", mi);
+      set("ss", ss);
+      set("mo", mo);
+      set("dd", dd);
+      set("wd", wd);
+
+      const wk = getISOWeek(parseInt(yy,10), parseInt(mo,10), parseInt(dd,10));
+      set("wk", String(wk).padStart(2, "0"));
+    }catch(e){
+      console.error("[clock tick] error:", e);
     }
+  }
 
-    function build(container, count, small=false){
-      const arr = [];
-      for(let i=0;i<count;i++){
-        const d = createDigit(small);
-        container.appendChild(d);
-        arr.push(d);
-      }
-      return arr;
-    }
+  function start(){
+    tick();
+    // 다음 정각 초까지 기다렸다가 1초마다 갱신 (드리프트 방지)
+    const ms = 1000 - (Date.now() % 1000);
+    setTimeout(function loop(){
+      tick();
+      setTimeout(loop, 1000);
+    }, ms);
+  }
 
-    const hourDigits   = build(document.getElementById("hours"), 2);
-    const minuteDigits = build(document.getElementById("minutes"), 2);
-    const secondDigits = build(document.getElementById("seconds"), 2);
-    const dateDigits   = build(document.getElementById("date"), 6, true);
-    const dayDigits    = build(document.getElementById("day"), 3, true);
-
-    function flip(el, newVal){
-      const top = el.querySelector(".top span");
-      const bottom = el.querySelector(".bottom span");
-      const flipTop = el.querySelector(".flip-top span");
-      const flipBottom = el.querySelector(".flip-bottom span");
-
-      if(top.textContent === newVal) return;
-
-      flipTop.textContent = top.textContent;
-      flipBottom.textContent = newVal;
-
-      el.classList.remove("play");
-      void el.offsetWidth;
-      el.classList.add("play");
-
-      setTimeout(() => {
-        top.textContent = newVal;
-        bottom.textContent = newVal;
-        el.classList.remove("play");
-      }, 840);
-    }
-
-    function update(){
-      const now = new Date(
-        new Date().toLocaleString("en-US", { timeZone: timezone })
-      );
-
-      const hh = String(now.getHours()).padStart(2,"0");
-      const mm = String(now.getMinutes()).padStart(2,"0");
-      const ss = String(now.getSeconds()).padStart(2,"0");
-
-      const yy = String(now.getFullYear()).slice(2);
-      const mo = String(now.getMonth()+1).padStart(2,"0");
-      const dd = String(now.getDate()).padStart(2,"0");
-
-      const day = now
-        .toLocaleDateString("en-US", { weekday:"short" })
-        .toUpperCase();
-
-      hourDigits.forEach((d,i) => flip(d, hh[i]));
-      minuteDigits.forEach((d,i) => flip(d, mm[i]));
-      secondDigits.forEach((d,i) => flip(d, ss[i]));
-
-      const dateStr = yy + mo + dd;
-      dateDigits.forEach((d,i) => flip(d, dateStr[i]));
-
-      dayDigits.forEach((d,i) => flip(d, day[i] || " "));
-    }
-
-    update();
-    setInterval(update, 1000);
-  </script>
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+})();
+</script>
 </body>
 </html>
